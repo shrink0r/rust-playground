@@ -1,20 +1,51 @@
 define rust-playground::basic {
 
-  $rust_package = 'rust_0.8-1_amd64.deb'
-  $rust_md5 = '7f2e19bc5cde47e143b7484ecda0207f'
+  $rust_version = '0.9'
+  $rust_name = "rust-${rust_version}"
+  $rust_package = "${rust_name}.tar.gz"
+  $rust_package_md5 = '6446642f5094800d4380c7aabca82de4'
+
+  package { "g++":
+    ensure => "installed"
+  }
 
   exec {
-    'download rust package':
-      command => "/usr/bin/wget -O ${rust_package} https://copy.com/voMAE7mI19Jf",
-      cwd     => '/opt',
-      notify  => Exec['install rust'],
-      onlyif  => "/bin/bash -c '[ ! -f /opt/${rust_package} ] || ! md5sum /opt/${rust_package} | grep ${rust_md5} > /dev/null '",
-      timeout => 0,
+    'rust-package-download':
+      command     => "/usr/bin/wget -O ${rust_package} http://static.rust-lang.org/dist/${rust_package}",
+      cwd         => '/opt',
+      notify      => Exec['rust-src-retrieval'],
+      onlyif      => "/bin/bash -c '[ ! -f /opt/${rust_package} ] || ! md5sum /opt/${rust_package} | grep ${rust_package_md5} > /dev/null '",
+      timeout     => 0,
       ;
-    'install rust':
-      command     => "/usr/bin/dpkg -i /opt/${rust_package}",
+    'rust-src-retrieval':
+      command     => "/bin/tar -xzf ${rust_package}",
       refreshonly => true,
-      require     => Exec['download rust package'],
+      cwd         => "/opt",
+      notify      => Exec['rust-configure'],
+      require     => Exec['rust-package-download'],
+      ;
+    'rust-configure':
+      command     => "/bin/bash -c './configure'",
+      cwd         => "/opt/${rust_name}",
+      # refreshonly => true,
+      notify      => Exec['rust-make'],
+      require     => Exec['rust-src-retrieval'],
+      timeout     => 0,
+      ;
+    'rust-make':
+      command     => "/usr/bin/make",
+      cwd         => "/opt/${rust_name}",
+      # refreshonly => true,
+      notify      => Exec['rust-make-install'],
+      require     => Exec['rust-configure'],
+      timeout     => 0,
+      ;
+    'rust-make-install':
+      command     => "/usr/bin/make install",
+      cwd         => "/opt/${rust_name}",
+      # refreshonly => true,
+      require     => Exec['rust-make'],
+      timeout     => 0,
       ;
   }
 

@@ -14,15 +14,14 @@ Vagrant.configure("2") do |config|
   # shell provisioner running only once every 48 hours
   config.vm.provision :shell, :inline =>'[ "$(find /home/vagrant/ -maxdepth 1 -name apt_updated -mtime -48)" == "" ] && apt-get update --fix-missing && touch /home/vagrant/apt_updated; echo ""'
 
-
-  ###############
-  # backend box #
-  ###############
+  ##################
+  # playground box #
+  ##################
   config.vm.define :playground do |playground|
     playground.vm.provider :virtualbox do |vb|
       vb.customize ["modifyvm", :id, "--name", "rust-playground"] # name for VirtualBox GUI
       vb.customize ["modifyvm", :id, "--memory", 1024]
-      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"] # fix eventual dns hick-ups on osx
     end
     playground.vm.hostname = "rust-playground.local"
     playground.vm.provision :puppet do |puppet|
