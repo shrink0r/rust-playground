@@ -1,0 +1,3 @@
+[submodule "development/puppets"]
+	path = development/puppets
+	url = git@github.com:berlinonline/puppets.git
